@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "ACS_CONNECTION_STRING": "",
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "",
+    "AzureWebJobsStorage": "",
+    "DEPLOYMENT_STORAGE_CONNECTION_STRING": "",
+    "EMAIL_SENDER_ADDRESS": "",
+    "FACE_ENDPOINT": "",
+    "FACE_KEY": "",
+    "NOTIFY_EMAIL": "",
+    "PERSON_GROUP_ID": "securitycam-users",
+    "IDENTIFY_CONFIDENCE_MIN": "0.55"
+  }
+}

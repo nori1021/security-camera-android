@@ -1,0 +1,15 @@
+# Azure Functions
+securitycam-functions/node_modules/
+securitycam-functions/local.settings.json
+securitycam-functions/.azure/
+
+# Secrets
+.env
+.env.*
+*.pem
+
+# OS / IDE
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
