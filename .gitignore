@@ -3,6 +3,10 @@ securitycam-functions/node_modules/
 securitycam-functions/local.settings.json
 securitycam-functions/.azure/
 
+# curl 用（顔画像の base64 を含むためコミットしない）
+curl-samples/register.json
+curl-samples/analyze.json
+
 # Secrets
 .env
 .env.*
