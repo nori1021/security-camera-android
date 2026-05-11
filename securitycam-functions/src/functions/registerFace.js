@@ -1,7 +1,9 @@
 "use strict";
 
 const { app } = require("@azure/functions");
-const face = require("../lib/faceApi");
+const { embeddingFromImageBuffer, averageEmbeddings } = require("../lib/faceEmbedding");
+const { upsertTemplate } = require("../lib/templateStore");
+const { normalizeSubjectId, isValidSubjectId } = require("../lib/subjectId");
 
 function json(status, body) {
   return new Response(JSON.stringify(body), {
@@ -16,9 +18,16 @@ app.http("registerFace", {
   handler: async (request, context) => {
     try {
       const body = await request.json();
-      const images = body.images;
-      const personName = (body.personName || "owner").trim() || "owner";
+      const subjectId = normalizeSubjectId(body);
 
+      if (!isValidSubjectId(subjectId)) {
+        return json(400, {
+          error:
+            "subjectId（または personName）は 1〜128 文字の英数字・ハイフン・アンダースコアのみにしてください。",
+        });
+      }
+
+      const images = body.images;
       if (!Array.isArray(images) || images.length === 0) {
         return json(400, { error: "images は base64 文字列の配列で指定してください。" });
       }
@@ -35,32 +44,31 @@ app.http("registerFace", {
         }
       }
 
-      const groupId = await face.ensurePersonGroup("SecurityCam users");
-      const personId = await face.findOrCreatePerson(groupId, personName);
-
-      const persisted = [];
+      const embeddings = [];
       for (let i = 0; i < buffers.length; i++) {
-        const r = await face.addPersonFace(groupId, personId, buffers[i]);
-        persisted.push(r.persistedFaceId);
+        const emb = await embeddingFromImageBuffer(buffers[i]);
+        if (emb) embeddings.push(emb);
       }
 
-      await face.trainPersonGroup(groupId);
-      const training = await face.waitTraining(groupId);
+      if (embeddings.length === 0) {
+        return json(400, {
+          error: "いずれの画像からも顔を検出できませんでした。明るさ・距離を調整してください。",
+        });
+      }
 
-      context.log(`registerFace OK person=${personName} faces=${persisted.length}`);
+      const template = averageEmbeddings(embeddings);
+      await upsertTemplate(subjectId, template);
+
+      context.log(`registerFace OK subject=${subjectId} images=${embeddings.length}/${buffers.length}`);
 
       return json(200, {
-        personGroupId: groupId,
-        personId,
-        personName,
-        persistedFaceIds: persisted,
-        training: training.status,
+        subject_id: subjectId,
+        images_used: embeddings.length,
+        images_total: buffers.length,
       });
     } catch (e) {
       context.log("registerFace error", e);
-      return json(e.status && e.status < 600 ? e.status : 500, {
-        error: e.message || String(e),
-      });
+      return json(500, { error: e.message || String(e) });
     }
   },
 });

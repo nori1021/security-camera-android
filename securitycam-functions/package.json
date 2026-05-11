@@ -5,14 +5,37 @@
   "main": "src/index.js",
   "scripts": {
     "start": "func start",
+    "azurite": "azurite --silent --location .azurite --debug .azurite/debug.log",
+    "dev": "concurrently -k -n azurite,func -c cyan,green \"npm run azurite\" \"wait-on tcp:127.0.0.1:10002 && func start\"",
     "publish": "func azure functionapp publish",
+    "postinstall": "node scripts/download-face-models.mjs",
+    "models": "node scripts/download-face-models.mjs",
+    "verify": "node scripts/smoke-face.cjs",
+    "init:settings": "node scripts/init-local-settings.mjs",
+    "settings:azurite": "node scripts/ensure-azurite-storage.mjs",
     "test": "echo \"No tests\""
   },
   "dependencies": {
     "@azure/communication-email": "^1.0.0",
-    "@azure/functions": "^4.6.0"
+    "@azure/data-tables": "^13.3.0",
+    "@azure/functions": "^4.6.0",
+    "@tensorflow/tfjs": "3.21.0",
+    "@tensorflow/tfjs-backend-cpu": "3.21.0",
+    "face-api.js": "^0.22.2",
+    "sharp": "^0.33.5"
+  },
+  "overrides": {
+    "@tensorflow/tfjs": "3.21.0",
+    "@tensorflow/tfjs-backend-cpu": "3.21.0",
+    "@tensorflow/tfjs-core": "3.21.0",
+    "@tensorflow/tfjs-data": "3.21.0",
+    "@tensorflow/tfjs-layers": "3.21.0",
+    "@tensorflow/tfjs-converter": "3.21.0"
   },
   "devDependencies": {
-    "azure-functions-core-tools": "^4.0.6821"
+    "azure-functions-core-tools": "^4.0.6821",
+    "azurite": "^3.34.0",
+    "concurrently": "^9.1.2",
+    "wait-on": "^8.0.2"
   }
 }

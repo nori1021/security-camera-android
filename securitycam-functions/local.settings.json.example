@@ -4,13 +4,12 @@
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "ACS_CONNECTION_STRING": "",
     "APPLICATIONINSIGHTS_CONNECTION_STRING": "",
-    "AzureWebJobsStorage": "",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;",
     "DEPLOYMENT_STORAGE_CONNECTION_STRING": "",
     "EMAIL_SENDER_ADDRESS": "",
-    "FACE_ENDPOINT": "",
-    "FACE_KEY": "",
     "NOTIFY_EMAIL": "",
-    "PERSON_GROUP_ID": "securitycam-users",
-    "IDENTIFY_CONFIDENCE_MIN": "0.55"
+    "FACE_MATCH_THRESHOLD": "0.82",
+    "FACE_STORAGE_CONNECTION_STRING": "",
+    "FACE_TEMPLATES_TABLE": "FaceTemplates"
   }
 }

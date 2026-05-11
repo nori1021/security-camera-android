@@ -3,9 +3,17 @@ securitycam-functions/node_modules/
 securitycam-functions/local.settings.json
 securitycam-functions/.azure/
 
+# Android (any module)
+**/local.properties
+*.jks
+*.keystore
+
 # curl 用（顔画像の base64 を含むためコミットしない）
 curl-samples/register.json
 curl-samples/analyze.json
+curl-samples/*.jpg
+curl-samples/*.jpeg
+curl-samples/*.png
 
 # Secrets
 .env

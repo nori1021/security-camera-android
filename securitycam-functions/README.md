@@ -1,43 +1,71 @@
 # securitycam-functions
 
-配置: `C:\Project\SecurityCamera\securitycam-functions`
+Azure Functions (**Node.js**, **v4 programming model**) backend for a security-camera–style workflow.
 
-セキュリティカメラ用の **Azure Functions（Node.js / v4 モデル）** 雛形です。
+Face embeddings are computed **inside the function** using **TensorFlow.js + face-api.js** (not Azure Cognitive Face REST). Templates persist to **Azure Table Storage**.
 
-- `POST /api/registerFace` … 顔画像（base64 配列）を登録し、Person Group を Train まで実行
-- `POST /api/analyze` … 1 枚を Detect → Identify。未登録なら（既定）**ACS Email** で通知＋画像添付
-- `GET /api/health` … 疎通確認（匿名）
+| HTTP route | Purpose |
+|------------|---------|
+| `POST /api/registerFace` | Multiple JPEG (base64) → averaged embedding → upsert template row |
+| `POST /api/analyze` | Single image → embedding → cosine match; optional **ACS Email** on unknown / ambiguous paths |
+| `POST /api/identifyFace` | Match only (no email) |
+| `GET /api/health` | Liveness (**anonymous**) |
 
-`registerFace` / `analyze` は **`function` 認証**（キー必須）です。
+`registerFace`, `analyze`, and `identifyFace` use **`authLevel: function`** — callers must pass `?code=` (host or function key).
 
-## 前提
+## Azure prerequisites
 
-- Azure に **Face API**・**Communication Services（メール検証済み）**・**関数アプリ** があること
-- 関数アプリの **環境変数**（例: **設定 → 環境変数 → アプリ設定**）に、少なくとも次を設定済みであること:  
-  `ACS_CONNECTION_STRING`, `APPLICATIONINSIGHTS_CONNECTION_STRING`, `AzureWebJobsStorage`, `DEPLOYMENT_STORAGE_CONNECTION_STRING`, `EMAIL_SENDER_ADDRESS`, `FACE_ENDPOINT`, `FACE_KEY`, `NOTIFY_EMAIL`
-- 任意: `PERSON_GROUP_ID`（未設定時は `securitycam-users`）、`IDENTIFY_CONFIDENCE_MIN`（既定 `0.55`）
+- Function App (Linux / Consumption or Flex — use **`func publish ... --build remote`** when native modules must build in Azure).
+- Storage: `AzureWebJobsStorage`; optional dedicated `FACE_STORAGE_CONNECTION_STRING` for template tables.
+- Email: **Azure Communication Services Email** with a **verified / linked sender domain** — set `ACS_CONNECTION_STRING`, `EMAIL_SENDER_ADDRESS`, and optionally `NOTIFY_EMAIL`.
 
-## ローカル・デプロイ
+Copy **`local.settings.json.example`** → **`local.settings.json`** locally (never commit). Deprecated **`FACE_ENDPOINT` / `FACE_KEY`** from older Face API designs are **not** used by current code.
 
-Core Tools は **devDependency** として入っています。`npm install` のあと **`npm run start`** でローカルホストが起動します。`local.settings.json` は example を元に自分の環境用に用意し、Git には含めないでください。Azure へは `func azure functionapp publish`（または `npm run publish -- <アプリ名>`）を利用します。詳細は [Azure Functions のドキュメント](https://learn.microsoft.com/azure/azure-functions/functions-run-local) を参照してください。
+## Run locally
 
-## 呼び出し例
+1. Install [Azure Functions Core Tools v4](https://learn.microsoft.com/azure/azure-functions/functions-run-local).
+2. Create `local.settings.json` from the example and fill values.
+3.
 
-**ホストキー**（ポータル: 関数アプリ → **アプリ キー**）を `YOUR_KEY` に置き換えます。
+```bash
+npm install
+func start
+```
 
-### 登録
+`npm install` runs **postinstall** to fetch face-api weights under `models/face-api`.
+
+See **[LOCAL_DEV.md](LOCAL_DEV.md)** for Azurite + Table storage.
+
+## Deploy
+
+```bash
+npm ci
+func azure functionapp publish <YOUR_FUNCTION_APP_NAME> --build remote
+```
+
+Mirror `Values` from `local.settings.json` into the portal **Configuration → Application settings** for production.
+
+### Seeing legacy “Face API 403” text from cloud
+
+Current sources **do not call Azure Face REST**. If the cloud still returns Face-related errors, an **older deployment** is likely running — redeploy from this repo.
+
+## Example HTTP calls
+
+Replace `YOUR_KEY` with a host or function key.
+
+### Register
 
 ```http
 POST https://<app>.azurewebsites.net/api/registerFace?code=YOUR_KEY
 Content-Type: application/json
 
 {
-  "personName": "owner",
+  "subjectId": "owner",
   "images": ["<base64>", "<base64>"]
 }
 ```
 
-### 判定（未登録時メール）
+### Analyze
 
 ```http
 POST https://<app>.azurewebsites.net/api/analyze?code=YOUR_KEY
@@ -50,9 +78,9 @@ Content-Type: application/json
 }
 ```
 
-`notifyEmail` を省略すると `NOTIFY_EMAIL` に送信します。
+## Operational notes
 
-## 注意
+- Similarity threshold: `FACE_MATCH_THRESHOLD` (default **0.82**).
+- Cold start / model load can exceed default HTTP timeouts — tune `host.json` `functionTimeout` and client read timeouts.
 
-- Face の **recognitionModel** は `recognition_04`、検出は `detection_03` に固定しています（Face リソースの仕様に合わせて変更が必要な場合があります）。
-- 初回の `analyze` の前に、必ず `registerFace` で **Person Group の Train が成功**している必要があります。
+Japanese summary: [README.ja.md](README.ja.md)

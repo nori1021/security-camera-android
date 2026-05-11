@@ -1,0 +1,8 @@
+## Copy this file to local.properties (do not commit local.properties).
+## Paths below use Windows-style escaping; adjust sdk.dir for your machine.
+
+sdk.dir=C\:\\Users\\YOUR_USER\\AppData\\Local\\Android\\Sdk
+
+## Optional: bake defaults into debug/release builds via BuildConfig (otherwise use in-app Settings).
+functions.base.url=https://YOUR-FUNCTION-APP.azurewebsites.net
+functions.key=

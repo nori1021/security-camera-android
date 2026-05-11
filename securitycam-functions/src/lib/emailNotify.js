@@ -8,8 +8,19 @@ function getConfig() {
   const to = process.env.NOTIFY_EMAIL || "";
   if (!conn) throw new Error("ACS_CONNECTION_STRING を設定してください。");
   if (!sender) throw new Error("EMAIL_SENDER_ADDRESS を設定してください。");
-  if (!to) throw new Error("NOTIFY_EMAIL を設定してください。");
   return { conn, sender, defaultTo: to };
+}
+
+/** ACS・送信元・宛先のいずれかが欠けるとき false（メール送信ルートに入らない） */
+function notifyPipelineConfigured(bodyNotifyEmail) {
+  const conn = process.env.ACS_CONNECTION_STRING || "";
+  const sender = process.env.EMAIL_SENDER_ADDRESS || "";
+  const defaultTo = process.env.NOTIFY_EMAIL || "";
+  const to =
+    typeof bodyNotifyEmail === "string" && bodyNotifyEmail.trim()
+      ? bodyNotifyEmail.trim()
+      : defaultTo;
+  return Boolean(conn && sender && to.trim());
 }
 
 /**
@@ -17,7 +28,10 @@ function getConfig() {
  */
 async function sendEmail(opts) {
   const { conn, sender, defaultTo } = getConfig();
-  const toAddress = opts.to || defaultTo;
+  const toAddress = (opts.to && opts.to.trim()) || defaultTo;
+  if (!toAddress) {
+    throw new Error("宛先メールがありません。notifyEmail または NOTIFY_EMAIL を設定してください。");
+  }
   const client = new EmailClient(conn);
 
   const message = {
@@ -47,4 +61,4 @@ async function sendEmail(opts) {
   return result;
 }
 
-module.exports = { sendEmail, getConfig };
+module.exports = { sendEmail, getConfig, notifyPipelineConfigured };
