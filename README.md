@@ -2,6 +2,8 @@
 
 End-to-end sample: an **Android** app (CameraX, ML Kit) that registers face templates and runs **on-device / server-side** face matching against a **Node.js Azure Functions** backend. Optional **email alerts** use **Azure Communication Services (Email)** with image attachments.
 
+To try the Android app without building from source, sideload [`releases/app-release.apk`](releases/app-release.apk) on a device and allow installation from unknown sources when prompted.
+
 > **Security note:** This project is a portfolio / reference implementation. Storing a **function host key inside a mobile app** is **not** a production security pattern. A real deployment would use a token-based API gateway, attestation, or short-lived credentials.
 
 ## Architecture (high level)
